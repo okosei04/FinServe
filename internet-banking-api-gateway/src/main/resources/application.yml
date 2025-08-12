@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: internet-banking-api-gateway
+
+    cloud:
+      gateway:
+        routes:
+          - id: internet-banking-user-service
+            uri: lb://internet-user-service
+            predicates:
+                - Path=/user/**
+            filters:
+                - StripPrefix=1
+
+          - id: internet-banking-fund-transfer-service
+            uri: lb://internet-banking-fund-transfer-service
+            predicates:
+              - Path=/fund-transfer/**
+            filters:
+              - StripPrefix=1
+  security:
+    oauth2:
+          client:
+            provider:
+                keycloak:
+                    token-uri:
+                      ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/token
+                    authorization-uri:
+                        ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/auth
+                    user-name-attribute:
+                        preferred_username
+                    user-info-uri:
+                        ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/userinfo
+                    jwk-set-uri:
+                        ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/certs
+                    user-info-authentication-method:
+                        header
+            registration:
+              internet-banking-core-client:
+                provider: keycloak
+                client-id: internet-banking-core-client
+                client-secret: HwrnjLtoYrxCHuh5eaPDXo7UsSLEKirY
+                authorization-grant-type: authorization_code
+                redirect-uri:
+                    http://localhost:8082/login/oauth2/code/code/keycloak
+                scope: openid
+            resource-server:
+              jwt:
+                jwt-issuer-uri:
+                  ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/certs
+
+
+
+app:
+  config:
+    keycloak:
+      url: http://localhost:8080
+      realm: internet-banking
+
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8081/eureka/
+
+
+
+server:
+  port: 8082
+
+
